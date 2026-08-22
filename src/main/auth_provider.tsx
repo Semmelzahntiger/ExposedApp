@@ -1,16 +1,17 @@
 import {Context, createContext, ReactNode, useContext, useEffect, useState} from "react";
 import {
     AuthResponse,
-    AuthResponseWrapper,
-    getRefreshToken,
+    AuthResponseWrapper, getNewAccessToken,
+    getRefreshToken, loadDataFromStore,
     login,
-    LoginPayload,
+    LoginPayload, logoutFromAccount, setAccessToken,
     setLoginData
 } from "@/main/account_data";
 import {ApiError, ErrorMessages} from "@/main/exceptions";
 
 type AuthValue = {
     isLoggedIn : boolean;
+    isLoading : boolean
     logIn: (payload: LoginPayload) => Promise<void>;
     logOut: () => void;
 };
@@ -18,18 +19,23 @@ const AuthContext : Context<AuthValue | null> = createContext<AuthValue | null>(
 
 export function AuthProvider({ children}: {children: ReactNode}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         (async () => {
             try {
+                await loadDataFromStore();
                 const token = await getRefreshToken();
                 if (token) {
-                    setIsLoggedIn(true);
+                    const newAccessToken = await getNewAccessToken(token);
+                    if(newAccessToken != null && newAccessToken.token) {
+                        setAccessToken(newAccessToken.token)
+                        setIsLoggedIn(true);
+                    }
                 }
             } catch (err) {
                 console.error("Startup auth check failed:", err);
             } finally {
-                setIsLoading(false);   // ← check is DONE, whatever the outcome
+                setIsLoading(false);
             }
         })();
     }, []);
@@ -49,10 +55,13 @@ export function AuthProvider({ children}: {children: ReactNode}) {
             throw new ApiError(-1)
         }
     }
-    const logOut = () => setIsLoggedIn(false);
+    const logOut = async () => {
+        await logoutFromAccount()
+        setIsLoggedIn(false);
+    }
 
     return (
-        <AuthContext.Provider value = {{isLoggedIn, logIn, logOut}}>
+        <AuthContext.Provider value = {{isLoggedIn, isLoading, logIn, logOut}}>
             {children}
         </AuthContext.Provider>
     )

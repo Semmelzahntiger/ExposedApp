@@ -1,8 +1,11 @@
 import * as SecureStore from "expo-secure-store"
 
-const accessTokenKey : string = "accessToken";
 const refreshTokenKey : string = "refreshToken";
+
 const apiPath : string = "http://localhost:8090/api";
+
+let accessToken : string | null = null;
+let inMemoryRefreshToken: string | null = null;
 
 
 export type AuthResponseWrapper = {
@@ -15,6 +18,9 @@ export type AuthResponse = {
     refreshToken: string;
     error: string
 }
+export type RefreshResponse = {
+    token : string
+}
 export type LoginPayload = {
     email: string;
     password: string;
@@ -26,14 +32,18 @@ export type RegistrationPayload = {
 }
 
 export async function setLoginData(data: AuthResponse) {
-    await SecureStore.setItemAsync(accessTokenKey, data.accessToken)
     await SecureStore.setItemAsync(refreshTokenKey, data.refreshToken)
+    accessToken = data.accessToken;
+    inMemoryRefreshToken = data.refreshToken;
 }
 export async function getAccessToken() : Promise<string | null> {
-    return SecureStore.getItemAsync(accessTokenKey)
+    return accessToken;
 }
 export async function getRefreshToken() : Promise<string | null> {
-    return SecureStore.getItemAsync(refreshTokenKey)
+    return inMemoryRefreshToken
+}
+export async function loadDataFromStore() {
+    inMemoryRefreshToken = await SecureStore.getItemAsync(refreshTokenKey);
 }
 export async function login(loginPayload : LoginPayload) : Promise<AuthResponseWrapper | null> {
     try {
@@ -51,6 +61,34 @@ export async function login(loginPayload : LoginPayload) : Promise<AuthResponseW
     } catch (err) {
         return null;
     }
+}
+export async function getNewAccessToken(refreshToken : string) : Promise<RefreshResponse | null> {
+    try {
+        const response = await fetch(apiPath.concat("/auth/refresh-token"), {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(refreshToken)
+        })
+        const code = response.status;
+        if(code != 200) {
+            return null;
+        }
+        const json = (await response.json()) as RefreshResponse;
+        return {
+            token : json.token
+        }
+    }
+    catch(err) {
+        return null;
+    }
+}
+export function setAccessToken(newAccessToken : string) {
+    accessToken = newAccessToken;
+}
+export async function logoutFromAccount() {
+    accessToken = null;
+    inMemoryRefreshToken = null;
+    await SecureStore.deleteItemAsync(refreshTokenKey)
 }
 export async function register(registerPayload : RegistrationPayload) : Promise<AuthResponse> {
     const response = await fetch(apiPath.concat("/auth/register"),
