@@ -4,6 +4,11 @@ const accessTokenKey : string = "accessToken";
 const refreshTokenKey : string = "refreshToken";
 const apiPath : string = "http://localhost:8090/api";
 
+
+export type AuthResponseWrapper = {
+    status: number;
+    authResponse: AuthResponse
+}
 export type AuthResponse = {
     success: boolean
     accessToken : string;
@@ -30,16 +35,22 @@ export async function getAccessToken() : Promise<string | null> {
 export async function getRefreshToken() : Promise<string | null> {
     return SecureStore.getItemAsync(refreshTokenKey)
 }
-export async function login(loginPayload : LoginPayload) : Promise<AuthResponse> {
-    const response = await fetch(apiPath.concat("/auth/login"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify(loginPayload)
-    })
-    if(!response.ok) {
-        console.log("Login denied or error occurred (Placeholder)")
+export async function login(loginPayload : LoginPayload) : Promise<AuthResponseWrapper | null> {
+    try {
+        const response = await fetch(apiPath.concat("/auth/login"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json"},
+            body: JSON.stringify(loginPayload)
+        })
+        const code = response.status;
+        const json = (await response.json()) as AuthResponse;
+        return {
+            status : code,
+            authResponse : json
+        }
+    } catch (err) {
+        return null;
     }
-    return (await response.json()) as AuthResponse;
 }
 export async function register(registerPayload : RegistrationPayload) : Promise<AuthResponse> {
     const response = await fetch(apiPath.concat("/auth/register"),
