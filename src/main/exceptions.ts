@@ -1,6 +1,7 @@
 
 export const ErrorMessages : Record<number, string> = {
     [-1] : "No Connection",
+    0: "Connection Not Found",
     401: "Unauthorized"
 };
 

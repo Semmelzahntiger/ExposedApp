@@ -2,7 +2,7 @@ import {Context, createContext, Dispatch, ReactNode, SetStateAction, useContext,
 import {useAuth} from "@/main/auth_provider";
 import {establishConnection, disconnect as disconnectSocket} from "@/main/connection_data";
 
-export type ConnectionState = "connected" | "disconnected" | "connection_closed";
+export type ConnectionState = "connecting" | "connected" | "disconnected" | "connection_closed";
 
 export type ConnectionValue = {
     connectionState : ConnectionState
@@ -14,14 +14,18 @@ const ConnectionContext : Context<ConnectionValue | null> = createContext<Connec
 export function ConnectionProvider({children}: {children : ReactNode}) {
     const { isLoggedIn } = useAuth();
     const [connectionState, setConnectionState] : [ConnectionState, Dispatch<SetStateAction<ConnectionState>>] = useState<ConnectionState>("disconnected");
-
     useEffect(() => {
         (async () => {
+            console.log("Checking if already logged in...");
             if(isLoggedIn && connectionState === "disconnected") {
-                await establishConnection(setConnectionState)
+                console.log("Already logged in, establishing Connection");
+                await establishConnection(setConnectionState);
+            }
+            else {
+                console.log("Not logged in, cannot automatically establish connection")
             }
         })();
-    }, []);
+    }, [isLoggedIn]);
     const connect = async () => {
         await establishConnection(setConnectionState)
     };

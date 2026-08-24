@@ -1,8 +1,8 @@
 import * as SecureStore from "expo-secure-store"
+import {API_BASE_URL, LOGIN_URL, REFRESH_URL, REGISTER_URL} from "@/config/endpoints";
 
 const refreshTokenKey : string = "refreshToken";
 
-const apiPath : string = "http://localhost:8090/api";
 
 let accessToken : string | null = null;
 let inMemoryRefreshToken: string | null = null;
@@ -36,10 +36,10 @@ export async function setLoginData(data: AuthResponse) {
     accessToken = data.accessToken;
     inMemoryRefreshToken = data.refreshToken;
 }
-export async function getAccessToken() : Promise<string | null> {
+export function getAccessToken() : string | null {
     return accessToken;
 }
-export async function getRefreshToken() : Promise<string | null> {
+export function getRefreshToken() : string | null {
     return inMemoryRefreshToken
 }
 export async function loadDataFromStore() {
@@ -47,7 +47,7 @@ export async function loadDataFromStore() {
 }
 export async function login(loginPayload : LoginPayload) : Promise<AuthResponseWrapper | null> {
     try {
-        const response = await fetch(apiPath.concat("/auth/login"), {
+        const response = await fetch(LOGIN_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json"},
             body: JSON.stringify(loginPayload)
@@ -64,10 +64,13 @@ export async function login(loginPayload : LoginPayload) : Promise<AuthResponseW
 }
 export async function getNewAccessToken(refreshToken : string) : Promise<RefreshResponse | null> {
     try {
-        const response = await fetch(apiPath.concat("/auth/refresh-token"), {
+        const request = {
+            refreshToken : refreshToken,
+        }
+        const response = await fetch(REFRESH_URL, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(refreshToken)
+            body: JSON.stringify(request)
         })
         const code = response.status;
         if(code != 200) {
@@ -91,7 +94,7 @@ export async function logoutFromAccount() {
     await SecureStore.deleteItemAsync(refreshTokenKey)
 }
 export async function register(registerPayload : RegistrationPayload) : Promise<AuthResponse> {
-    const response = await fetch(apiPath.concat("/auth/register"),
+    const response = await fetch(REGISTER_URL,
         {
             method: "POST",
             headers : { "Content-Type": "application/json"},

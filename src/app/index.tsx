@@ -1,11 +1,21 @@
-import {Text, View, StyleSheet, Pressable} from "react-native";
+import {Text, View, StyleSheet, Pressable, ActivityIndicator} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {LinearGradient} from "expo-linear-gradient";
-import {router} from "expo-router";
+import {Href, Redirect, router} from "expo-router";
 import {default_style} from "@/styles/basic_style";
+import {ConnectionValue, useConnection} from "@/main/connection_provider";
+import {AuthValue, useAuth} from "@/main/auth_provider";
+import {Dispatch, SetStateAction, useState} from "react";
+
 
 export default function Index() {
     const insets = useSafeAreaInsets();
+    const authState : AuthValue  = useAuth()
+    const connectState : ConnectionValue = useConnection();
+
+    if(connectState.connectionState === "connected") {
+        return <Redirect href="/game/menu"/>;
+    }
 
     return (
         <View style={[default_style.container, { paddingBottom: insets.bottom + 16 }]}>
@@ -21,7 +31,6 @@ export default function Index() {
                     </View>
                 </LinearGradient>
             </Pressable>
-
             <Pressable onPress={() => router.push("/register")}>
                 <LinearGradient
                     colors={["#8e2de2", "#0084bd"]}
@@ -34,8 +43,13 @@ export default function Index() {
                     </View>
                 </LinearGradient>
             </Pressable>
-
+            { (authState.isLoading || connectState.connectionState === "connecting") && (
+                <View style={default_style.overlay}>
+                    <ActivityIndicator size="large" color="white"/>
+                </View>
+            )}
         </View>
     );
 }
+
 
