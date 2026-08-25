@@ -1,4 +1,4 @@
-import {OutgoingMessages} from "@/main/Messages";
+import {OutboundMessages} from "@/main/MessageProtocol";
 
 export class ConnectionHolder {
     public readonly _connection : WebSocket;
@@ -16,7 +16,7 @@ export class ConnectionHolder {
         return socket === this._connection;
     }
 
-    public sendMessage(message : OutgoingMessages) : void {
+    public sendMessage(message : OutboundMessages) : void {
         this._connection.send(JSON.stringify(message));
     }
 }

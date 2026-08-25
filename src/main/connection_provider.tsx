@@ -12,14 +12,14 @@ export type ConnectionValue = {
 const ConnectionContext : Context<ConnectionValue | null> = createContext<ConnectionValue | null>(null);
 
 export function ConnectionProvider({children}: {children : ReactNode}) {
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn , logOut} = useAuth();
     const [connectionState, setConnectionState] : [ConnectionState, Dispatch<SetStateAction<ConnectionState>>] = useState<ConnectionState>("disconnected");
     useEffect(() => {
         (async () => {
             console.log("Checking if already logged in...");
             if(isLoggedIn && connectionState === "disconnected") {
                 console.log("Already logged in, establishing Connection");
-                await establishConnection(setConnectionState);
+                await establishConnection(setConnectionState, logOut);
             }
             else {
                 console.log("Not logged in, cannot automatically establish connection")
@@ -27,7 +27,7 @@ export function ConnectionProvider({children}: {children : ReactNode}) {
         })();
     }, [isLoggedIn]);
     const connect = async () => {
-        await establishConnection(setConnectionState)
+        await establishConnection(setConnectionState, logOut);
     };
     const disconnect = async () => {
         disconnectSocket();

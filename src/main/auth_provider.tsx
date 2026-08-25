@@ -52,6 +52,7 @@ export function AuthProvider({ children}: {children: ReactNode}) {
     }, []);
 
     const logIn = async (payload: LoginPayload) => {
+        setIsLoggedIn(false);
         setIsLoggingIn(true)
         const responseWrapper : AuthResponseWrapper | null = await login(payload);
         if(responseWrapper != null) {
@@ -62,6 +63,7 @@ export function AuthProvider({ children}: {children: ReactNode}) {
             }
             else {
                 setIsLoggingIn(false)
+                setIsLoggedIn(false);
                 throw new ApiError(responseWrapper.status)
             }
         }
