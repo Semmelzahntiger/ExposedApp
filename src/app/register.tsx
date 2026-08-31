@@ -1,10 +1,16 @@
 import {Pressable, Text, TextInput, View} from "react-native";
 import {default_style} from "@/styles/basic_style";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {input_styles} from "@/styles/input_styles";
+import {Redirect} from "expo-router";
+import {ConnectionValue, useConnection} from "@/main/connection_provider";
+import {AuthValue, useAuth} from "@/main/auth_provider";
+import {RegistrationPayload} from "@/main/account_data";
+import {ApiError} from "@/main/exceptions";
 
 
 export default function register() {
+
     const [email, setMail] = useState("")
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
@@ -15,6 +21,20 @@ export default function register() {
     const [usernameValid, setUsernameValid] = useState("")
     const [passwordValid, setPasswordValid] = useState("")
     const [confirmPasswordValid, setConfirmPasswordValid] = useState("")
+    const [errorState, setErrorState] = useState<string>("")
+    const authState: AuthValue = useAuth();
+    const connectState : ConnectionValue = useConnection();
+    useEffect(() => {
+        console.log("Logged in. Opening connection...")
+        if (authState.isLoggedIn && connectState.connectionState === "disconnected") {
+            connectState.connect();
+        }
+    }, [authState.isLoggedIn, connectState.connectionState]);
+
+    if(connectState.connectionState === "connected") {
+        console.log("Connected!");
+        return <Redirect href="/game/menu"/>;
+    }
 
     return (<View style={[default_style.container, {justifyContent: "center", paddingTop: 40}]}>
         <TextInput
@@ -53,7 +73,19 @@ export default function register() {
         <Pressable onPress={() => setInvisible((invisible) => !invisible)}>
             <Text style={{color: "#FFFFFF", alignSelf: "flex-end"}}>{invisible ? "Show Password" : "Hide Password"}</Text>
         </Pressable>
-        <Pressable onPress={() => {}}>
+        <Pressable onPress={async () => {
+            console.log("Registering...");
+            const credentials : RegistrationPayload = {email, username, password}
+            try {
+                await authState.register(credentials)
+                setErrorState("")
+            } catch(error) {
+                if(error instanceof ApiError) {
+                    setErrorState(error.errorMessage)
+                    console.log("Couldn't register. ", error.errorMessage)
+                }
+            }
+        }}>
             <Text style={[input_styles.button, {color: "#FFFFFF", alignSelf: "flex-end", padding: 10, borderRadius: 5}]}>
                 Register</Text>
         </Pressable>

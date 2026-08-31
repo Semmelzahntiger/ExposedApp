@@ -1,11 +1,12 @@
 import {ActivityIndicator, Pressable, Text, TextInput, View} from "react-native";
 import {default_style} from "@/styles/basic_style";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {input_styles} from "@/styles/input_styles";
 import {useAuth} from "@/main/auth_provider";
 import {LoginPayload} from "@/main/account_data";
 import {useConnection} from "@/main/connection_provider";
 import {ApiError} from "@/main/exceptions";
+import {router} from "expo-router";
 
 
 export default function login() {
@@ -21,9 +22,21 @@ export default function login() {
 
     const authState = useAuth();
     const connectState = useConnection();
-    if(!authState.isLoading && authState.isLoggedIn) {
 
-    }
+    // Responsible for handling connection establishment after Access token has been successfully fetched
+    useEffect(() => {
+        console.log("Logged in. Opening connection...")
+        if (authState.isLoggedIn && (connectState.connectionState === "disconnected" || connectState.connectionState === "connection_closed")) {
+            connectState.connect();
+        }
+    }, [authState.isLoggedIn, connectState.connectionState]);
+
+    useEffect(() => {
+        if (connectState.connectionState === "connected") {
+            console.log("Connection successful. Forwarding to menu.")
+            router.replace("/game/menu");
+        }
+    }, [connectState.connectionState]);
 
     return (<View style={[default_style.container, {justifyContent: "center", paddingTop: 40}]}>
         <TextInput
@@ -47,7 +60,7 @@ export default function login() {
             <Text style={{color: "#FFFFFF", alignSelf: "flex-end"}}>{invisible ? "Show Password" : "Hide Password"}</Text>
         </Pressable>
         <Pressable onPress={ async () => {
-            console.log("Logging in...")
+            console.log("Logging in...");
             const credentials : LoginPayload = {
                 email : email,
                 password : password

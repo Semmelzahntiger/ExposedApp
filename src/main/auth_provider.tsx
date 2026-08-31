@@ -3,7 +3,7 @@ import {
     AuthResponseWrapper, getNewAccessToken,
     getRefreshToken, loadDataFromStore,
     login,
-    LoginPayload, logoutFromAccount, setAccessToken,
+    LoginPayload, logoutFromAccount, registerUser, RegistrationPayload, setAccessToken,
     setLoginData
 } from "@/main/account_data";
 import {ApiError} from "@/main/exceptions";
@@ -12,7 +12,9 @@ export type AuthValue = {
     isLoggedIn : boolean;
     isLoggingIn: boolean
     isLoading : boolean
+    isInitialLogin : boolean
     logIn: (payload: LoginPayload) => Promise<void>;
+    register: (payload : RegistrationPayload) => Promise<void>;
     logOut: () => void;
 };
 const AuthContext : Context<AuthValue | null> = createContext<AuthValue | null>(null);
@@ -21,6 +23,7 @@ export function AuthProvider({ children}: {children: ReactNode}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoggingIn, setIsLoggingIn] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
+    const [isInitialLogin, setIsInitialLogin] = useState(false);
     console.debug(`Current State of AuthProvider: isLoggedIn :${isLoggedIn}; Loading: ${isLoading}; isLoggingIn: ${isLoggingIn}`);
     useEffect(() => {
         (async () => {
@@ -37,10 +40,14 @@ export function AuthProvider({ children}: {children: ReactNode}) {
                         console.log("Received new Access Token")
                         setAccessToken(newAccessToken.token)
                         setIsLoggedIn(true);
+                        setIsInitialLogin(true);
                     }
                     else {
                         console.log("Couldn't fetch new Access Token")
                     }
+                }
+                else {
+                    console.log("No Token in Store")
                 }
             } catch (err) {
                 console.error("Startup auth check failed:", err);
@@ -76,9 +83,30 @@ export function AuthProvider({ children}: {children: ReactNode}) {
         await logoutFromAccount()
         setIsLoggedIn(false);
     }
+    const register : (payload : RegistrationPayload) => Promise<void> = async (payload: RegistrationPayload) => {
+        setIsLoggedIn(false);
+        setIsLoggingIn(true);
+        const responseWrapper : AuthResponseWrapper | null = await registerUser(payload);
+        if(responseWrapper != null) {
+            if(responseWrapper.status === 200) {
+                await setLoginData(responseWrapper.authResponse);
+                setIsLoggedIn(true);
+                setIsLoggingIn(false);
+            }
+            else {
+                setIsLoggingIn(false)
+                setIsLoggedIn(false);
+                throw new ApiError(responseWrapper.status)
+            }
+        }
+        else {
+            setIsLoggingIn(false)
+            throw new ApiError(-1)
+        }
+    }
 
     return (
-        <AuthContext.Provider value = {{isLoggedIn, isLoggingIn, isLoading, logIn, logOut}}>
+        <AuthContext.Provider value = {{isLoggedIn, isLoggingIn, isLoading,isInitialLogin, logIn, register, logOut}}>
             {children}
         </AuthContext.Provider>
     )

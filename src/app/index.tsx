@@ -5,7 +5,7 @@ import {Href, Redirect, router} from "expo-router";
 import {default_style} from "@/styles/basic_style";
 import {ConnectionValue, useConnection} from "@/main/connection_provider";
 import {AuthValue, useAuth} from "@/main/auth_provider";
-import {Dispatch, SetStateAction, useState} from "react";
+import {Dispatch, SetStateAction, useEffect, useState} from "react";
 
 
 export default function Index() {
@@ -13,9 +13,12 @@ export default function Index() {
     const authState : AuthValue  = useAuth()
     const connectState : ConnectionValue = useConnection();
 
-    if(connectState.connectionState === "connected") {
-        return <Redirect href="/game/menu"/>;
-    }
+    useEffect(() => {
+        if (connectState.connectionState === "connected") {
+            console.log("Connection successful. Forwarding to menu.")
+            router.replace("/game/menu");
+        }
+    }, [connectState.connectionState]);
 
     return (
         <View style={[default_style.container, { paddingBottom: insets.bottom + 16 }]}>

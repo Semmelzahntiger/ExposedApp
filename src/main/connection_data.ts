@@ -17,6 +17,9 @@ type MessageOfType<T extends MessageType> = Extract<InboundMessages, { type: T }
 
 
 export function setConnection(newConnection : ConnectionHolder) {
+    if(connection) {
+        connection.close();
+    }
     connection = newConnection;
     errorClosure = false;
 }
@@ -77,6 +80,7 @@ export async function establishConnection(connectionStateDispatcher : Dispatch<S
                 else {
                     console.log("No authentication found for connection, unexpected connection state. Closing Socket.");
                     socket.close();
+                    connectionStateDispatcher("connection_closed");
                 }
             }
         }
@@ -95,9 +99,11 @@ export async function establishConnection(connectionStateDispatcher : Dispatch<S
         const msg = JSON.parse(event.data) as InboundMessages;
         switch (msg.type) {
             case "confirm_authentication":
+                console.log("Authentication confirmed.")
                 connectionStateDispatcher("connected")
                 break;
-            case "deny_authentication":
+            case "denied_authentication":
+                console.log("Authentication denied.");
                 connectionStateDispatcher("connection_closed")
                 onDeniedAuthentication();
                 break;

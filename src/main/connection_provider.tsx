@@ -1,4 +1,5 @@
 import {Context, createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from "react";
+import {AppState} from "react-native";
 import {useAuth} from "@/main/auth_provider";
 import {establishConnection, disconnect as disconnectSocket} from "@/main/connection_data";
 
@@ -12,25 +13,37 @@ export type ConnectionValue = {
 const ConnectionContext : Context<ConnectionValue | null> = createContext<ConnectionValue | null>(null);
 
 export function ConnectionProvider({children}: {children : ReactNode}) {
-    const { isLoggedIn , logOut} = useAuth();
+    const { isInitialLogin , logOut} = useAuth();
     const [connectionState, setConnectionState] : [ConnectionState, Dispatch<SetStateAction<ConnectionState>>] = useState<ConnectionState>("disconnected");
     useEffect(() => {
         (async () => {
-            console.log("Checking if already logged in...");
-            if(isLoggedIn && connectionState === "disconnected") {
+            if(isInitialLogin && connectionState === "disconnected") {
                 console.log("Already logged in, establishing Connection");
                 await establishConnection(setConnectionState, logOut);
             }
-            else {
-                console.log("Not logged in, cannot automatically establish connection")
-            }
         })();
-    }, [isLoggedIn]);
+    }, [isInitialLogin]);
+    // Close the socket when the app is backgrounded. React Native has no reliable
+    // "app terminated" event, and "background" is the last signal delivered before
+    // the OS suspends/kills the app — closing here prevents a server-side session
+    // from lingering and blocking the next login (backend denies duplicate auth).
+    useEffect(() => {
+        const sub = AppState.addEventListener("change", (state) => {
+            if (state === "background") {
+                console.log("App backgrounded — closing websocket");
+                disconnectSocket();
+                setConnectionState("disconnected");
+            }
+        });
+        return () => sub.remove();
+    }, []);
+
     const connect = async () => {
         await establishConnection(setConnectionState, logOut);
     };
     const disconnect = async () => {
         disconnectSocket();
+        setConnectionState("connection_closed");
     };
     return (
         <ConnectionContext.Provider

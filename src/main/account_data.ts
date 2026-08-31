@@ -14,9 +14,9 @@ export type AuthResponseWrapper = {
 }
 export type AuthResponse = {
     success: boolean
-    accessToken : string;
+    authToken: string;     // /login delivers the access token under this name
     refreshToken: string;
-    error: string
+    error: string | null
 }
 export type RefreshResponse = {
     token : string
@@ -32,8 +32,11 @@ export type RegistrationPayload = {
 }
 
 export async function setLoginData(data: AuthResponse) {
+    if (!data.authToken) {
+        console.warn("Login response contained no auth token. Keys:", Object.keys(data));
+    }
     await SecureStore.setItemAsync(refreshTokenKey, data.refreshToken)
-    accessToken = data.accessToken;
+    accessToken = data.authToken;
     inMemoryRefreshToken = data.refreshToken;
 }
 export function getAccessToken() : string | null {
@@ -51,6 +54,23 @@ export async function login(loginPayload : LoginPayload) : Promise<AuthResponseW
             method: "POST",
             headers: { "Content-Type": "application/json"},
             body: JSON.stringify(loginPayload)
+        })
+        const code = response.status;
+        const json = (await response.json()) as AuthResponse;
+        return {
+            status : code,
+            authResponse : json
+        }
+    } catch (err) {
+        return null;
+    }
+}
+export async function registerUser(registerPayload : RegistrationPayload) : Promise<AuthResponseWrapper | null> {
+    try {
+        const response = await fetch(REGISTER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json"},
+            body: JSON.stringify(registerPayload)
         })
         const code = response.status;
         const json = (await response.json()) as AuthResponse;
