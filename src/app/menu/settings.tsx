@@ -19,7 +19,7 @@ export default function Settings() {
             <View style={[settings_style.content, {paddingTop: insets.top + 72, paddingBottom: insets.bottom + 20}]}>
                 <Text style={settings_style.screenTitle}>Settings</Text>
 
-                <Pressable style={settings_style.primaryButton} onPress={() => router.push("/game/upload")}>
+                <Pressable style={settings_style.primaryButton} onPress={() => router.push("/menu/upload")}>
                     <Text style={settings_style.primaryButtonText}>Upload Data</Text>
                 </Pressable>
 

@@ -30,7 +30,7 @@ export default function RootLayout() {
             }),
             addListener("confirm_leave_room",(msg) => {
                 console.log("Left Room")
-                router.replace("/game/menu")
+                router.replace("/game/game_menu")
             })
         ]
         return () => listeners.forEach(close => close());

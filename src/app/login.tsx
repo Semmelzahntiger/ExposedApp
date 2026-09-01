@@ -4,39 +4,23 @@ import React, {useEffect, useState} from "react";
 import {input_styles} from "@/styles/input_styles";
 import {useAuth} from "@/main/auth_provider";
 import {LoginPayload} from "@/main/account_data";
-import {useConnection} from "@/main/connection_provider";
 import {ApiError} from "@/main/exceptions";
-import {router} from "expo-router";
+import {Redirect, router} from "expo-router";
 
 
 export default function login() {
     const [email, setMail] = useState("")
-    const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [invisible, setInvisible] = useState(true)
 
-    const [emailValid, setEmailValid] = useState("")
-    const [usernameValid, setUsernameValid] = useState("")
-    const [passwordValid, setPasswordValid] = useState("")
     const [errorState, setErrorState] = useState<string>("")
 
     const authState = useAuth();
-    const connectState = useConnection();
 
-    // Responsible for handling connection establishment after Access token has been successfully fetched
-    useEffect(() => {
-        console.log("Logged in. Opening connection...")
-        if (authState.isLoggedIn && (connectState.connectionState === "disconnected" || connectState.connectionState === "connection_closed")) {
-            connectState.connect();
-        }
-    }, [authState.isLoggedIn, connectState.connectionState]);
+    if(authState.isLoggedIn) {
+        return <Redirect href="/menu/main_menu"/>
+    }
 
-    useEffect(() => {
-        if (connectState.connectionState === "connected") {
-            console.log("Connection successful. Forwarding to menu.")
-            router.replace("/game/menu");
-        }
-    }, [connectState.connectionState]);
 
     return (<View style={[default_style.container, {justifyContent: "center", paddingTop: 40}]}>
         <TextInput
@@ -78,7 +62,7 @@ export default function login() {
             <Text style={[input_styles.button, {color: "#FFFFFF", alignSelf: "flex-end", padding: 10, borderRadius: 5}]}>
                 Login</Text>
         </Pressable>
-        { (authState.isLoading || authState.isLoggingIn || connectState.connectionState === "connecting") && (
+        { (authState.isLoading || authState.isLoggingIn) && (
             <View style={default_style.overlay}>
                 <ActivityIndicator size="large" color="white"/>
             </View>

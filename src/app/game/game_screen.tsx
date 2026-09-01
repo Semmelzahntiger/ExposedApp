@@ -136,7 +136,7 @@ export default function Game_screen() {
             {/* Leave (top-left) */}
             <Pressable
                 style={[game_style.leaveButton, {top: insets.top + 12, left: 16}]}
-                onPress={() => router.replace("/game/menu")}
+                onPress={() => router.replace("/game/game_menu")}
             >
                 <Text style={game_style.leaveIcon}>✕</Text>
             </Pressable>

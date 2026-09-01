@@ -11,14 +11,13 @@ import {Dispatch, SetStateAction, useEffect, useState} from "react";
 export default function Index() {
     const insets = useSafeAreaInsets();
     const authState : AuthValue  = useAuth()
-    const connectState : ConnectionValue = useConnection();
 
     useEffect(() => {
-        if (connectState.connectionState === "connected") {
-            console.log("Connection successful. Forwarding to menu.")
-            router.replace("/game/menu");
+        if(authState.isLoggedIn) {
+            console.log("Logged in. Forwarding to Menu")
+            router.replace("/menu/main_menu");
         }
-    }, [connectState.connectionState]);
+    }, [authState.isLoading]);
 
     return (
         <View style={[default_style.container, { paddingBottom: insets.bottom + 16 }]}>
@@ -46,7 +45,7 @@ export default function Index() {
                     </View>
                 </LinearGradient>
             </Pressable>
-            { (authState.isLoading || connectState.connectionState === "connecting") && (
+            { (authState.isLoading) && (
                 <View style={default_style.overlay}>
                     <ActivityIndicator size="large" color="white"/>
                 </View>

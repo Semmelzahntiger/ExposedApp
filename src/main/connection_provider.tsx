@@ -7,39 +7,14 @@ export type ConnectionState = "connecting" | "connected" | "disconnected" | "con
 
 export type ConnectionValue = {
     connectionState : ConnectionState
-    connect: () => void;
-    disconnect: () => void;
+    connect: () => Promise<void>;
+    disconnect: () => Promise<void>;
 }
 const ConnectionContext : Context<ConnectionValue | null> = createContext<ConnectionValue | null>(null);
 
 export function ConnectionProvider({children}: {children : ReactNode}) {
-    const { isLoggedIn, isInitialLogin , logOut} = useAuth();
+    const {isLoggedIn, logOut} = useAuth();
     const [connectionState, setConnectionState] : [ConnectionState, Dispatch<SetStateAction<ConnectionState>>] = useState<ConnectionState>("disconnected");
-    useEffect(() => {
-        (async () => {
-            if(isInitialLogin && connectionState === "disconnected") {
-                console.log("Already logged in, establishing Connection");
-                await establishConnection(setConnectionState, logOut);
-            }
-        })();
-    }, [isInitialLogin]);
-
-    // Android backgrounds the app while the native file picker (or any external
-    // activity) is open, which can drop the websocket ("Connection Reset"). We
-    // can't keep a backgrounded socket alive from JS, so reconnect on return to
-    // the foreground if the connection was lost while we were logged in.
-    const stateRef = useRef(connectionState);
-    stateRef.current = connectionState;
-    useEffect(() => {
-        const sub = AppState.addEventListener("change", (state) => {
-            const lost = stateRef.current !== "connected" && stateRef.current !== "connecting";
-            if (state === "active" && isLoggedIn && lost) {
-                console.log("Returned to foreground with a dropped socket — reconnecting");
-                establishConnection(setConnectionState, logOut);
-            }
-        });
-        return () => sub.remove();
-    }, [isLoggedIn]);
 
     const connect = async () => {
         await establishConnection(setConnectionState, logOut);

@@ -9,7 +9,7 @@ import {useAuth} from "@/main/auth_provider";
 import {useConnection} from "@/main/connection_provider";
 import {useCallback, useEffect, useState} from "react";
 
-export default function MainMenu() {
+export default function GameMainMenu() {
     const insets = useSafeAreaInsets();
     const connection : ConnectionHolder | null = getConnection();
     const authState = useAuth();
@@ -25,9 +25,8 @@ export default function MainMenu() {
     );
 
     const logout = () => {
-        router.replace("/");
+        router.replace("/menu/main_menu");
         connectState.disconnect(); // close the websocket
-        authState.logOut();        // clear tokens / logged-in state
     };
 
     const [joinOpen, setJoinOpen] = useState(false);
@@ -71,9 +70,6 @@ export default function MainMenu() {
             <Stack.Screen options={{gestureEnabled: false}}/>
 
             <View style={{flexDirection: "row", gap: 10, paddingTop: insets.top + 8, alignItems: "center"}}>
-                <Pressable style={settingsButton} onPress={() => router.push("/game/settings")}>
-                    <Text style={settingsButtonText}>Settings</Text>
-                </Pressable>
                 <View style={{flex: 1}}/>
                 <Pressable style={logoutButton} onPress={logout}>
                     <Text style={logoutText}>Logout</Text>

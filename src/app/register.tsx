@@ -3,7 +3,6 @@ import {default_style} from "@/styles/basic_style";
 import React, {useEffect, useState} from "react";
 import {input_styles} from "@/styles/input_styles";
 import {Redirect} from "expo-router";
-import {ConnectionValue, useConnection} from "@/main/connection_provider";
 import {AuthValue, useAuth} from "@/main/auth_provider";
 import {RegistrationPayload} from "@/main/account_data";
 import {ApiError} from "@/main/exceptions";
@@ -23,17 +22,9 @@ export default function register() {
     const [confirmPasswordValid, setConfirmPasswordValid] = useState("")
     const [errorState, setErrorState] = useState<string>("")
     const authState: AuthValue = useAuth();
-    const connectState : ConnectionValue = useConnection();
-    useEffect(() => {
-        console.log("Logged in. Opening connection...")
-        if (authState.isLoggedIn && connectState.connectionState === "disconnected") {
-            connectState.connect();
-        }
-    }, [authState.isLoggedIn, connectState.connectionState]);
 
-    if(connectState.connectionState === "connected") {
-        console.log("Connected!");
-        return <Redirect href="/game/menu"/>;
+    if(authState.isLoggedIn) {
+        return <Redirect href="/menu/main_menu" />;
     }
 
     return (<View style={[default_style.container, {justifyContent: "center", paddingTop: 40}]}>

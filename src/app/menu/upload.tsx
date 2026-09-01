@@ -19,7 +19,6 @@ function ThemedRadio({label, selected, onSelect}: {label: string; selected: bool
         </Pressable>
     );
 }
-// TODO: surface this to the user (e.g. force re-login) — placeholder for now.
 function onUploadUnauthorized() {
     console.log("Upload failed: unauthorized (token refresh did not help)");
 }
@@ -67,7 +66,6 @@ async function upload(file: DocumentPicker.DocumentPickerAsset, platform: EmbedP
     }
 
     if (!response.ok) {
-        // TODO: handle non-auth failures (bad file type, server error, ...)
         console.log("Upload failed:", response.status);
         return;
     }
