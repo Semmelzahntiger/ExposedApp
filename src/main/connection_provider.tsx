@@ -1,4 +1,4 @@
-import {Context, createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState} from "react";
+import {Context, createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useRef, useState} from "react";
 import {AppState} from "react-native";
 import {useAuth} from "@/main/auth_provider";
 import {establishConnection, disconnect as disconnectSocket} from "@/main/connection_data";
@@ -13,7 +13,7 @@ export type ConnectionValue = {
 const ConnectionContext : Context<ConnectionValue | null> = createContext<ConnectionValue | null>(null);
 
 export function ConnectionProvider({children}: {children : ReactNode}) {
-    const { isInitialLogin , logOut} = useAuth();
+    const { isLoggedIn, isInitialLogin , logOut} = useAuth();
     const [connectionState, setConnectionState] : [ConnectionState, Dispatch<SetStateAction<ConnectionState>>] = useState<ConnectionState>("disconnected");
     useEffect(() => {
         (async () => {
@@ -23,20 +23,23 @@ export function ConnectionProvider({children}: {children : ReactNode}) {
             }
         })();
     }, [isInitialLogin]);
-    // Close the socket when the app is backgrounded. React Native has no reliable
-    // "app terminated" event, and "background" is the last signal delivered before
-    // the OS suspends/kills the app — closing here prevents a server-side session
-    // from lingering and blocking the next login (backend denies duplicate auth).
+
+    // Android backgrounds the app while the native file picker (or any external
+    // activity) is open, which can drop the websocket ("Connection Reset"). We
+    // can't keep a backgrounded socket alive from JS, so reconnect on return to
+    // the foreground if the connection was lost while we were logged in.
+    const stateRef = useRef(connectionState);
+    stateRef.current = connectionState;
     useEffect(() => {
         const sub = AppState.addEventListener("change", (state) => {
-            if (state === "background") {
-                console.log("App backgrounded — closing websocket");
-                disconnectSocket();
-                setConnectionState("disconnected");
+            const lost = stateRef.current !== "connected" && stateRef.current !== "connecting";
+            if (state === "active" && isLoggedIn && lost) {
+                console.log("Returned to foreground with a dropped socket — reconnecting");
+                establishConnection(setConnectionState, logOut);
             }
         });
         return () => sub.remove();
-    }, []);
+    }, [isLoggedIn]);
 
     const connect = async () => {
         await establishConnection(setConnectionState, logOut);

@@ -71,6 +71,10 @@ export default function MainMenu() {
             <Stack.Screen options={{gestureEnabled: false}}/>
 
             <View style={{flexDirection: "row", gap: 10, paddingTop: insets.top + 8, alignItems: "center"}}>
+                <Pressable style={settingsButton} onPress={() => router.push("/game/settings")}>
+                    <Text style={settingsButtonText}>Settings</Text>
+                </Pressable>
+                <View style={{flex: 1}}/>
                 <Pressable style={logoutButton} onPress={logout}>
                     <Text style={logoutText}>Logout</Text>
                 </Pressable>
@@ -241,6 +245,20 @@ const testButton = {
 const testButtonText = {
     color: "#8a90a0",
     fontSize: 14,
+};
+
+const settingsButton = {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#2a2f3a",
+    alignItems: "center" as const,
+};
+const settingsButtonText = {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600" as const,
 };
 
 const logoutButton = {
