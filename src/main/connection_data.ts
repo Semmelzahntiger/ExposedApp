@@ -3,7 +3,7 @@ import {Dispatch, SetStateAction} from "react";
 import {ConnectionHolder} from "@/main/connection";
 import {getAccessToken} from "@/main/account_data";
 import {InboundMessages, AuthenticationMessage, MessageType} from "@/main/MessageProtocol";
-import {WSS_BASE_URL} from "@/config/endpoints";
+import {wssBaseUrl} from "@/config/endpoints";
 
 
 let connection: ConnectionHolder | null = null;
@@ -59,7 +59,7 @@ export function addListener<T extends MessageType> (
 
 
 export async function establishConnection(connectionStateDispatcher : Dispatch<SetStateAction<ConnectionState>>, onDeniedAuthentication: () => void) {
-    const socket : WebSocket = new WebSocket(WSS_BASE_URL);
+    const socket : WebSocket = new WebSocket(wssBaseUrl());
     const connection : ConnectionHolder = new ConnectionHolder(socket);
     setConnection(connection);
 

@@ -15,6 +15,29 @@ export const game_style = StyleSheet.create({
         position: "absolute",
         top: 0, left: 0, right: 0, bottom: 0,
     },
+    // ---- text rounds (searched / commented): the resource shown as a centered quote ----
+    quoteContainer: {
+        position: "absolute",
+        top: 0, left: 0, right: 0, bottom: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 32,
+        gap: 12,
+    },
+    quoteCaption: {
+        color: "#8a90a0",
+        fontSize: 13,
+        fontWeight: "700",
+        letterSpacing: 1,
+        textTransform: "uppercase",
+    },
+    quoteText: {
+        color: "#FFFFFF",
+        fontSize: 26,
+        fontStyle: "italic",
+        fontWeight: "600",
+        textAlign: "center",
+    },
     // ---- leave button (top-left) ----
     leaveButton: {
         position: "absolute",

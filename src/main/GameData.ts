@@ -1,11 +1,6 @@
-export type EmbedPlatform = "instagram" | "tiktok";
-
-// A single social embed to display during a round.
-// `url` is the public permalink of the reel / post / tiktok.
-export type GameEmbed = {
-    platform: EmbedPlatform;
-    url: string;
-};
+export type EmbedPlatform =
+    "instagram" |
+    "tiktok";
 
 export type RoomSettings = {
     roomSize: number;

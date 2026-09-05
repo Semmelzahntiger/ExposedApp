@@ -1,8 +1,12 @@
 import {Participant} from "@/main/MessageProtocol";
 
 
-let participants: Participant[];
+let participants: Participant[] = [];
 
 export function setParticipants(newParticipants: Participant[]) {
     participants = newParticipants;
+}
+
+export function getParticipants(): Participant[] {
+    return participants;
 }

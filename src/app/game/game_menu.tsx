@@ -15,6 +15,12 @@ export default function GameMainMenu() {
     const authState = useAuth();
     const connectState = useConnection();
 
+    useEffect(() => {
+        if(connectState.connectionState != "connected") {
+            router.replace("/menu/main_menu")
+        }
+    }, [connectState.connectionState]);
+
     // Block leaving the menu with the back gesture / Android hardware button.
     // (The swipe gesture is disabled via <Stack.Screen> below.)
     useFocusEffect(
@@ -33,8 +39,6 @@ export default function GameMainMenu() {
     const [roomCode, setRoomCode] = useState("");
     const [joining, setJoining] = useState(false);
 
-    // Stop the spinner if the join is rejected. On confirm_join_room the game
-    // layout (_layout.tsx) forwards us to /game/room, unmounting this screen.
     useEffect(() => {
         const subs = [
             addListener("denied_join_room", (msg) => {

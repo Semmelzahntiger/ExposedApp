@@ -22,22 +22,26 @@ export default function MainMenu() {
         }, [])
     );
     useEffect(() => {
+        if(!authState.isLoggedIn) {
+            router.replace("/");
+        }
+    }, [authState.isLoggedIn]);
+    useEffect(() => {
         if(connectState.connectionState === "connected") {
             console.log("Connected, forwarding to game menu.")
             router.replace("/game/game_menu")
         }
     }, [connectState.connectionState]);
 
-    const logout = () => {
-        authState.logOut();
-        router.replace("/");
-    };
+
 
 
     return (
         <View style={[styles.container, {paddingBottom: insets.bottom + 16}]}>
             <View style={[styles.logoutButton, {marginTop: insets.top + 30}]}>
-                <Pressable>
+                <Pressable onPress={() => {
+                    authState.logOut();
+                }}>
                     <Text style={[styles.genericText, {color: RED_TONE}]}>
                         Logout
                     </Text>

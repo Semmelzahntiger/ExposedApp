@@ -201,8 +201,6 @@ export default function Room() {
                 setPlayers(msg.players)
                 setRoomSize(msg.settings.roomSize);
                 setRounds((msg.settings.rounds))
-                // setPlatforms(msg.settings.enabledPlatforms)
-                // setSources
             }),
             addListener("confirm_change_room_settings", (msg) => {
                 console.log("Successfully uploaded Room Settings")
@@ -315,8 +313,6 @@ export default function Room() {
             >
                 <Text style={room_style.cornerButtonText}>Leave</Text>
             </Pressable>
-
-            {/* Bottom-right: start (dimmed + disabled unless host) */}
             <Pressable
                 style={[
                     room_style.cornerButton,
@@ -327,6 +323,9 @@ export default function Room() {
                 onPress={() => {
                     // TODO: send `start_game` to the backend
                     console.log("start game");
+                    connection?.sendMessage({
+                        type: "start_game"
+                    });
                 }}
             >
                 <Text style={room_style.cornerButtonText}>Start</Text>
@@ -359,7 +358,7 @@ export default function Room() {
                         <ThemedSlider
                             label="Room Size"
                             value={roomSize}
-                            min={2}
+                            min={1}
                             max={10}
                             step={1}
                             onValueChange={setRoomSize}

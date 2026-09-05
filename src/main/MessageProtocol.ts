@@ -65,8 +65,40 @@ export type ScorePlayer = {
 }
 export type UserScore = {
     user: UUID;
+    username: string;
     score: number;
 }
+export type MediaItem = InstagramMediaType | TikTokSlideshowItem | TikTokVideoItem | StringMediaItem |  MissingMediaItem;
+export type DistinctionType = "instagram_mixed_media" | "tiktok_slide_show_media" | "tiktok_video_media" | "string_media_item" | "missing_media"
+export type MediaType = "MIXED" | "IMAGE" | "VIDEO" | "TEXT" | "NONE";
+export type SocialMediaPlatform = "instagram" | "tiktok";
+
+export type AbstractMediaType<D extends DistinctionType, T extends MediaType> = {
+    platform : SocialMediaPlatform;
+    type: T;
+    distinctionType: D;
+}
+export type InstagramMediaType = AbstractMediaType<"instagram_mixed_media", "MIXED"> & {
+    entries: InstagramCDNEntry[];
+}
+export type InstagramCDNEntry = {
+    type: string;
+    url: string;
+}
+export type TikTokSlideshowItem = AbstractMediaType<"tiktok_slide_show_media", "IMAGE"> & {
+    imageUrls: string[];
+    audioUrl: string;
+}
+// The video is not sent as a direct CDN URL — it is streamed through the backend
+// proxy (see tiktokStreamUrl in config/endpoints.ts), keyed by these two fields.
+export type TikTokVideoItem = AbstractMediaType<"tiktok_video_media", "VIDEO"> & {
+    postId: string;
+    roomId: string;
+}
+export type StringMediaItem = AbstractMediaType<"string_media_item", "TEXT"> & {
+    stringMedia: string;
+}
+export type MissingMediaItem = AbstractMediaType<"missing_media", "NONE">;
 
 // ---- Direction unions (frontend's perspective) ----
 export type OutboundMessages =
@@ -158,9 +190,14 @@ export type UpdateRoomStateMessage = Message<"update_room_state"> & {
     hostIsReceiver: boolean;
     settings: RoomSettingsState;
 }
+// One resolved media item: a direct CDN URL plus what it is ("video" | "image").
+export type NextRoundResource = {
+    mediaType: string;
+    url: string;
+}
 export type NextRoundMessage = Message<"next_round"> & {
-    resourceType: string;
-    resource: string;
+    mediaItem: MediaItem;
+    roundTimeInSeconds: number;
 }
 export type ConfirmSubmissionMessage = Message<"confirm_submission"> & {}
 export type DenySubmissionMessage = Message<"denied_submission"> & {
@@ -173,6 +210,7 @@ export type UpdateGameScoreStateMessage = Message<"game_score_state"> & {
 export type GameOverMessage = Message<"game_over"> & {
     isWinner: boolean;
     ownUUID: UUID;
+    username : string;
     scores: UserScore[];
 }
 export type MultiGuessResultMessage = Message<"multi_guess_result"> & {}

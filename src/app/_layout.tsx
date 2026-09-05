@@ -8,7 +8,7 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{backgroundColor:"#000000"}}>
         <AuthProvider>
             <ConnectionProvider>
-                <Stack screenOptions={ { headerShown: false, animation: "slide_from_bottom", animationDuration: 100}}/>
+                <Stack screenOptions={ { headerShown: false, animation: "none"}}/>
             </ConnectionProvider>
         </AuthProvider>
       </SafeAreaProvider>

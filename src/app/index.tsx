@@ -1,16 +1,17 @@
 import {Text, View, StyleSheet, Pressable, ActivityIndicator} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {LinearGradient} from "expo-linear-gradient";
-import {Href, Redirect, router} from "expo-router";
+import {router} from "expo-router";
 import {default_style} from "@/styles/basic_style";
-import {ConnectionValue, useConnection} from "@/main/connection_provider";
 import {AuthValue, useAuth} from "@/main/auth_provider";
-import {Dispatch, SetStateAction, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
+import {ServerSettingsModal} from "@/components/ServerSettingsModal";
 
 
 export default function Index() {
     const insets = useSafeAreaInsets();
     const authState : AuthValue  = useAuth()
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         if(authState.isLoggedIn) {
@@ -45,13 +46,67 @@ export default function Index() {
                     </View>
                 </LinearGradient>
             </Pressable>
+
             { (authState.isLoading) && (
                 <View style={default_style.overlay}>
                     <ActivityIndicator size="large" color="white"/>
+                    {/* Cancel a hanging auto-login so the UI (and server switching) stays usable. */}
+                    <Pressable style={local.cancelButton} onPress={() => authState.cancelAutoLogin()}>
+                        <Text style={local.cancelText}>Cancel</Text>
+                    </Pressable>
                 </View>
             )}
+
+            {/* Server settings gear — rendered last so it stays tappable above the loading overlay. */}
+            <Pressable
+                style={[local.gear, { top: insets.top + 12, right: 16 }]}
+                onPress={() => setSettingsOpen(true)}
+            >
+                <Text style={local.gearIcon}>⚙</Text>
+            </Pressable>
+
+            <ServerSettingsModal
+                visible={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                onServerChanged={() => {
+                    // A token from the old server is invalid on the new one: stop any
+                    // in-flight auto-login and clear the saved session.
+                    authState.cancelAutoLogin();
+                    authState.logOut();
+                }}
+            />
         </View>
     );
 }
 
-
+const local = StyleSheet.create({
+    gear: {
+        position: "absolute",
+        height: 44,
+        width: 44,
+        borderRadius: 14,
+        backgroundColor: "#111318",
+        borderWidth: 1,
+        borderColor: "#2a2f3a",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    gearIcon: {
+        color: "#FFFFFF",
+        fontSize: 22,
+    },
+    cancelButton: {
+        marginTop: 20,
+        paddingHorizontal: 24,
+        paddingVertical: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#2a2f3a",
+        backgroundColor: "#111318",
+    },
+    cancelText: {
+        color: "#FFFFFF",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+});

@@ -1,24 +1,15 @@
 import {useState} from "react";
-import {View, Text, Pressable, ActivityIndicator} from "react-native";
+import {ActivityIndicator, Pressable, Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {router} from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import {EmbedPlatform} from "@/main/GameData";
 import {settings_style} from "@/styles/settings_style";
 import {getAccessToken, getNewAccessToken, getRefreshToken, setAccessToken} from "@/main/account_data";
-import {UPLOAD_URL} from "@/config/endpoints";
+import {uploadUrl} from "@/config/endpoints";
+import * as FileSystem from "expo-file-system/legacy";
+import {ThemedRadio} from "@/components/ThemedRadio";
 
-// RN has no native radio — a simple ring + filled dot, mirroring the checkbox pattern.
-function ThemedRadio({label, selected, onSelect}: {label: string; selected: boolean; onSelect: () => void}) {
-    return (
-        <Pressable style={settings_style.radioRow} onPress={onSelect}>
-            <View style={settings_style.radioRing}>
-                {selected && <View style={settings_style.radioDot}/>}
-            </View>
-            <Text style={settings_style.radioLabel}>{label}</Text>
-        </Pressable>
-    );
-}
 function onUploadUnauthorized() {
     console.log("Upload failed: unauthorized (token refresh did not help)");
 }
@@ -32,19 +23,15 @@ async function upload(file: DocumentPicker.DocumentPickerAsset, platform: EmbedP
 
     // Build the multipart body fresh per attempt (a consumed FormData can't be re-sent).
     // Note: do NOT set Content-Type — fetch adds the multipart boundary itself.
-    const send = (bearer: string) => {
-        const form = new FormData();
-        form.append("declaredFileType", platform); // already lowercase ("tiktok" | "instagram")
-        form.append("file", {
-            uri: file.uri,
-            name: file.name,
-            type: file.mimeType ?? "application/octet-stream",
-        } as any);
-        return fetch(UPLOAD_URL, {
-            method: "POST",
+    const send = async (bearer: string) => {
+        return await FileSystem.uploadAsync(uploadUrl(), file.uri, {
+            httpMethod: "POST",
+            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+            fieldName: "file",
+            mimeType: file.mimeType ?? "application/octet-stream",
+            parameters: {declaredFileType: platform}, // other form fields go here
             headers: {Authorization: `Bearer ${bearer}`},
-            body: form,
-        });
+        }); // { status, headers, body, mimeType }
     };
 
     let response = await send(token);
@@ -65,8 +52,8 @@ async function upload(file: DocumentPicker.DocumentPickerAsset, platform: EmbedP
         }
     }
 
-    if (!response.ok) {
-        console.log("Upload failed:", response.status);
+    if (!(response.status === 200)) {
+        console.log("Upload failed:", response);
         return;
     }
 
