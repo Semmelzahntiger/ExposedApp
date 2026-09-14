@@ -1,5 +1,7 @@
 # ExposedApp (Frontend)
 
+Status: Work in Progress, many features are rapid prototypes built using AI and do not represent the final state.
+
 React Native (Expo) frontend for **Exposed**, a social-media party game.
 
 For the full product description, data handling, and consent details, see the backend repo:
@@ -8,6 +10,3 @@ For the full product description, data handling, and consent details, see the ba
 ## Tech Stack
 * React Native with Expo (Expo Router)
 * TypeScript
-
-## Setup
-1. Install dependencies:
